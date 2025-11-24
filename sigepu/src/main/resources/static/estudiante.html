@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Portal Estudiante - SIGEPU</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f4f9; color: #333; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .btn-logout { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+        
+        /* Barra de Filtros */
+        .filter-bar { background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; display: flex; align-items: center; gap: 10px; }
+        select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; flex-grow: 1; max-width: 300px; }
+
+        /* Formulario Perfil */
+        #profileForm { background: white; padding: 30px; max-width: 500px; margin: 0 auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-save { background: #007bff; color: white; width: 100%; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
+
+        /* Tarjetas de Pasantía */
+        .card { background: white; border: 1px solid #e0e0e0; padding: 20px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #6c757d; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-2px); }
+        .card h3 { margin-top: 0; color: #333; }
+        
+        .btn-apply { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-apply:hover { background: #218838; }
+        
+        .btn-cancel-req { background: #ffc107; color: #333; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em; margin-top: 5px; }
+
+        /* Badges de Estado */
+        .status-container { padding: 10px; background-color: #f8f9fa; border-radius: 6px; margin-top: 10px; border: 1px solid #eee; }
+        .status-label { font-weight: bold; font-size: 0.9em; display: block; margin-bottom: 5px; }
+        
+        /* Colores de estado específicos */
+        .st-pendiente { color: #d39e00; border-left: 4px solid #ffc107; padding-left: 8px; }
+        .st-aprobado { color: #17a2b8; border-left: 4px solid #17a2b8; padding-left: 8px; }
+        .st-rechazado { color: #dc3545; border-left: 4px solid #dc3545; padding-left: 8px; }
+        .st-contratado { color: #28a745; border-left: 4px solid #28a745; padding-left: 8px; font-size: 1.1em; }
+        .st-no-seleccionado { color: #6c757d; border-left: 4px solid #6c757d; padding-left: 8px; }
+        .st-cancelado { color: #343a40; border-left: 4px solid #343a40; padding-left: 8px; text-decoration: line-through; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h2 id="welcomeMsg" style="margin:0;">Cargando...</h2>
+            <small id="userCareer" style="color:#666;"></small>
+        </div>
+        <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+    </div>
+
+    <div id="profileSection" class="hidden">
+        <div id="profileForm">
+            <h2 style="text-align:center">🚀 ¡Completa tu Perfil!</h2>
+            <p>Para ver las pasantías, necesitamos saber quién eres.</p>
+            
+            <label>Nombre:</label>
+            <input type="text" id="p_nombre" placeholder="Ej: Juan">
+            <label>Apellido:</label>
+            <input type="text" id="p_apellido" placeholder="Ej: Perez">
+            <label>Carrera:</label>
+            <select id="p_carrera" style="width:100%; padding:10px; margin-bottom:15px;">
+                <option value="1">Ingeniería en Sistemas y Computación</option>
+                <option value="2">Ingeniería Industrial</option>
+                <option value="3">Licenciatura en Administración de Empresas</option>
+                <option value="4">Licenciatura en Mercadeo</option>
+                <option value="5">Licenciatura en Diseño Gráfico</option>
+                <option value="6">Licenciatura en Idioma Inglés</option>
+                <option value="7">Licenciatura en Ciencias Jurídicas</option>
+                <option value="8">Licenciatura en Contaduría Pública</option>
+                <option value="9">Licenciatura en Psicología</option>
+                <option value="10">Arquitectura</option>
+            </select>
+            <button class="btn-save" onclick="guardarPerfil()">Guardar y Continuar</button>
+        </div>
+    </div>
+
+    <div id="mainSection" class="hidden">
+        <div class="filter-bar">
+            <strong>🔍 Filtrar por Carrera:</strong>
+            <select id="filtroCarrera" onchange="cargarPasantias()">
+                <option value="TODAS">-- Mostrar Todas --</option>
+                <option value="Ingeniería en Sistemas y Computación">Ingeniería en Sistemas</option>
+                <option value="Ingeniería Industrial">Ingeniería Industrial</option>
+                <option value="Licenciatura en Administración de Empresas">Administración de Empresas</option>
+                <option value="Licenciatura en Mercadeo">Mercadeo</option>
+                <option value="Licenciatura en Diseño Gráfico">Diseño Gráfico</option>
+                <option value="Licenciatura en Ciencias Jurídicas">Ciencias Jurídicas</option>
+                <option value="Licenciatura en Psicología">Psicología</option>
+            </select>
+            <button onclick="cargarPasantias()" style="background:#6c757d; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer">🔄</button>
+        </div>
+
+        <div id="pasantiasList">Cargando...</div>
+    </div>
+
+    <script>
+        let ID_ESTUDIANTE = null;
+        let ID_USUARIO = null;
+        let MIS_DATOS_GLOBAL = null; // Para guardar todas las pasantias y no pedir al server al filtrar
+
+        async function iniciar() {
+            const sesion = localStorage.getItem('usuario_sigepu');
+            if (!sesion) { window.location.href = 'login.html'; return; }
+            const usuario = JSON.parse(sesion);
+            ID_USUARIO = usuario.id;
+            
+            try {
+                const res = await fetch(`/api/estudiantes/usuario/${ID_USUARIO}`);
+                
+                if (res.status === 204 || res.status === 404) {
+                    document.getElementById('welcomeMsg').innerText = `Hola, ${usuario.email}`;
+                    document.getElementById('profileSection').classList.remove('hidden');
+                } else if (res.ok) {
+                    const estudiante = await res.json();
+                    ID_ESTUDIANTE = estudiante.id;
+                    document.getElementById('welcomeMsg').innerText = `Hola, ${estudiante.nombre}`;
+                    document.getElementById('userCareer').innerText = estudiante.carrera ? estudiante.carrera.nombre : '';
+                    document.getElementById('mainSection').classList.remove('hidden');
+                    cargarPasantias();
+                } else {
+                    throw new Error("Error al obtener perfil");
+                }
+            } catch (e) { alert("Error crítico al iniciar: " + e.message); }
+        }
+
+        iniciar();
+
+        async function guardarPerfil() {
+            const datos = {
+                nombre: document.getElementById('p_nombre').value,
+                apellido: document.getElementById('p_apellido').value,
+                idCarrera: document.getElementById('p_carrera').value
+            };
+            try {
+                const res = await fetch(`/api/estudiantes/usuario/${ID_USUARIO}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(datos)
+                });
+                if(res.ok) { alert("¡Perfil creado!"); location.reload(); }
+                else alert("Error al guardar perfil.");
+            } catch(e) { alert("Error de conexión"); }
+        }
+
+        async function cargarPasantias() {
+            const lista = document.getElementById('pasantiasList');
+            const filtro = document.getElementById('filtroCarrera').value;
+            
+            // Si ya tenemos datos y solo estamos filtrando, no llamamos al server
+            if (!MIS_DATOS_GLOBAL) {
+                lista.innerHTML = "⏳ Cargando datos...";
+                try {
+                    const [resPasantias, resMisApps] = await Promise.all([
+                        fetch('/api/pasantias'),
+                        fetch(`/api/aplicaciones/estudiante/${ID_ESTUDIANTE}`)
+                    ]);
+                    
+                    const pasantias = await resPasantias.json();
+                    const misApps = resMisApps.ok ? await resMisApps.json() : [];
+                    
+                    // Guardamos en memoria para filtrar rápido
+                    MIS_DATOS_GLOBAL = { pasantias, misApps };
+                } catch (e) {
+                    console.error(e);
+                    lista.innerHTML = "Error cargando datos.";
+                    return;
+                }
+            }
+
+            // Renderizar con filtro
+            const { pasantias, misApps } = MIS_DATOS_GLOBAL;
+            const mapaApps = {};
+            misApps.forEach(a => { if(a.pasantia) mapaApps[a.pasantia.id] = a; });
+
+            let html = '';
+            let contador = 0;
+
+            pasantias.forEach(p => {
+                // FILTRO POR CARRERA
+                if (filtro !== 'TODAS' && p.carreraRequerida.nombre !== filtro) {
+                    return; // Si no coincide, saltamos esta iteración
+                }
+                contador++;
+
+                const app = mapaApps[p.id];
+                let contenidoEstado;
+
+                if (app) {
+                    // --- LOGICA DE ESTADOS DETALLADA ---
+                    let mensaje = "";
+                    let estilo = "";
+                    let mostrarBotonCancelar = false;
+
+                    switch (app.estadoUniversidad) {
+                        case 'PENDIENTE':
+                            mensaje = "🟡 Solicitud recibida. La Universidad está revisando tus requisitos.";
+                            estilo = "st-pendiente";
+                            mostrarBotonCancelar = true;
+                            break;
+                        case 'RECHAZADO':
+                            mensaje = "🔴 Tu solicitud fue rechazada por la Universidad.";
+                            estilo = "st-rechazado";
+                            break;
+                        case 'APROBADO':
+                            mensaje = "🔵 ¡Aprobado por la U! Tu perfil fue enviado a la empresa para revisión.";
+                            estilo = "st-aprobado";
+                            mostrarBotonCancelar = true;
+                            break;
+                        case 'SOLICITUD_CANCELACION':
+                            mensaje = "🟠 Has solicitado cancelar. Esperando confirmación de la U.";
+                            estilo = "st-pendiente";
+                            break;
+                        case 'CANCELADO':
+                            mensaje = "⚫ Cancelación aceptada. Puedes volver a postularte si lo deseas.";
+                            estilo = "st-cancelado";
+                            break;
+                        case 'CONTRATADO':
+                            mensaje = "🟢 ¡FELICIDADES! La empresa te ha seleccionado para el puesto.";
+                            estilo = "st-contratado";
+                            break;
+                        case 'NO_SELECCIONADO':
+                            mensaje = "⚫ La empresa ha decidido no continuar con tu proceso. ¡Sigue intentando!";
+                            estilo = "st-no-seleccionado";
+                            break;
+                    }
+
+                    // Si está 'muerto' (cancelado/rechazado/no seleccionado), en teoría podría volver a aplicar
+                    // según tu lógica estricta anterior, bloqueamos. Según la lógica "reset", mostramos botón.
+                    // Aquí mostramos el estado histórico para que sepa qué pasó.
+                    
+                    contenidoEstado = `
+                        <div class="status-container">
+                            <span class="status-label">Estado de tu postulación:</span>
+                            <div class="${estilo}">${mensaje}</div>
+                            ${mostrarBotonCancelar ? `<button class="btn-cancel-req" onclick="pedirCancelacion(${app.id})">Cancelar Solicitud</button>` : ''}
+                        </div>
+                    `;
+
+                } else {
+                    // NO HAY APLICACIÓN PREVIA
+                    contenidoEstado = `<button class="btn-apply" onclick="aplicar(${p.id})">👋 Postularme</button>`;
+                }
+
+                html += `
+                <div class="card" style="border-left-color: ${app ? '#007bff' : '#28a745'}">
+                    <h3>${p.titulo}</h3>
+                    <p style="color:#555">${p.descripcion}</p>
+                    <p style="font-size:0.9em">
+                        🏢 <strong>${p.empresa ? p.empresa.nombre : 'N/A'}</strong> &nbsp;|&nbsp; 
+                        🎓 ${p.carreraRequerida.nombre}
+                    </p>
+                    ${contenidoEstado}
+                </div>`;
+            });
+
+            if (contador === 0) html = "<p>No se encontraron pasantías con este filtro.</p>";
+            lista.innerHTML = html;
+        }
+
+        async function aplicar(idPas) {
+            if(!confirm("¿Postularse?")) return;
+            try {
+                const res = await fetch('/api/aplicaciones/aplicar', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({idEstudiante: ID_ESTUDIANTE, idPasantia: idPas})
+                });
+                const txt = await res.text();
+                if(res.ok) { 
+                    alert("¡Enviado!"); 
+                    MIS_DATOS_GLOBAL = null; // Forzar recarga del servidor
+                    cargarPasantias(); 
+                }
+                else {
+                    try { alert("Error: " + JSON.parse(txt).message); } catch { alert("Error: " + txt); }
+                }
+            } catch (e) { alert("Error de conexión"); }
+        }
+
+        async function pedirCancelacion(idApp) {
+            if(confirm("¿Cancelar solicitud?")) {
+                await fetch(`/api/aplicaciones/${idApp}/solicitar-cancelacion`, { method: 'PUT' });
+                MIS_DATOS_GLOBAL = null;
+                cargarPasantias();
+            }
+        }
+
+        function logout() { localStorage.removeItem('usuario_sigepu'); window.location.href = 'login.html'; }
+    </script>
+</body>
+</html>

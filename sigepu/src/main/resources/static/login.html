@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso SIGEPU</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0; }
+        
+        .card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
+        
+        h1 { color: #333; margin-bottom: 10px; }
+        p { color: #666; margin-bottom: 30px; font-size: 0.9em; }
+        
+        /* Contenedor relativo para posicionar el ojito */
+        .input-group { position: relative; width: 100%; margin-bottom: 15px; }
+        
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
+        
+        /* Botón del Ojo */
+        .eye-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #666;
+            padding: 0;
+            width: auto; /* Sobrescribe el width:100% de los botones generales */
+            outline: none;
+        }
+        .eye-btn:hover { color: #333; background: none; }
+
+        button[type="submit"] { width: 100%; padding: 12px; background-color: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-top: 10px; }
+        button[type="submit"]:hover { background-color: #5a6fd6; }
+        
+        .toggle-link { margin-top: 20px; display: block; color: #667eea; text-decoration: none; font-size: 0.9em; cursor: pointer; }
+        .toggle-link:hover { text-decoration: underline; }
+        
+        .error-msg { color: #dc3545; margin-bottom: 15px; display: none; font-size: 0.9em; background: #ffe6e6; padding: 10px; border-radius: 4px; }
+        .success-msg { color: #28a745; margin-bottom: 15px; display: none; font-size: 0.9em; background: #e6fffa; padding: 10px; border-radius: 4px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        
+        <div id="loginSection">
+            <h1>🔐 Ingresar a SIGEPU</h1>
+            <p>Bienvenido de nuevo</p>
+
+            <div id="loginError" class="error-msg"></div>
+
+            <form onsubmit="handleLogin(event)">
+                <input type="email" id="email" placeholder="Correo electrónico" required>
+                
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Contraseña" required>
+                    <button type="button" class="eye-btn" 
+                            onmousedown="mostrarPass(true)" 
+                            onmouseup="mostrarPass(false)" 
+                            onmouseleave="mostrarPass(false)"
+                            ontouchstart="mostrarPass(true)" 
+                            ontouchend="mostrarPass(false)">
+                        👁️
+                    </button>
+                </div>
+
+                <button type="submit">Iniciar Sesión</button>
+            </form>
+
+            <span class="toggle-link" onclick="toggleForms()">¿No tienes cuenta? Regístrate aquí</span>
+        </div>
+
+        <div id="registerSection" class="hidden">
+            <h1>🚀 Crear Cuenta</h1>
+            <p>Únete a la plataforma</p>
+
+            <div id="regError" class="error-msg"></div>
+            <div id="regSuccess" class="success-msg">¡Cuenta creada! Ya puedes iniciar sesión.</div>
+
+            <form onsubmit="handleRegister(event)">
+                <input type="email" id="reg_email" placeholder="Correo electrónico" required>
+                <input type="password" id="reg_password" placeholder="Contraseña" required>
+                
+                <select id="reg_rol" required>
+                    <option value="" disabled selected>Selecciona tu Rol...</option>
+                    <option value="ESTUDIANTE">👨‍🎓 Estudiante</option>
+                    <option value="GESTOR_EMPRESARIAL">🏢 Empresa</option>
+                    <option value="GESTOR_UNIVERSITARIO">🏛️ Universidad (Admin)</option>
+                </select>
+
+                <button type="submit">Registrarse</button>
+            </form>
+
+            <span class="toggle-link" onclick="toggleForms()">¿Ya tienes cuenta? Inicia Sesión</span>
+        </div>
+
+    </div>
+
+    <script>
+        // --- FUNCION MOSTRAR PASSWORD (HOLD TO VIEW) ---
+        function mostrarPass(mostrar) {
+            const input = document.getElementById('password');
+            input.type = mostrar ? 'text' : 'password';
+        }
+
+        // --- LOGICA VISUAL (Alternar vistas) ---
+        function toggleForms() {
+            const loginSec = document.getElementById('loginSection');
+            const regSec = document.getElementById('registerSection');
+            document.querySelectorAll('.error-msg').forEach(e => e.style.display = 'none');
+            document.getElementById('regSuccess').style.display = 'none';
+
+            if (loginSec.classList.contains('hidden')) {
+                loginSec.classList.remove('hidden');
+                regSec.classList.add('hidden');
+            } else {
+                loginSec.classList.add('hidden');
+                regSec.classList.remove('hidden');
+            }
+        }
+
+        // --- LOGICA LOGIN ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (res.ok) {
+                    const usuario = await res.json();
+                    localStorage.setItem('usuario_sigepu', JSON.stringify(usuario));
+
+                    if (usuario.rol === 'ESTUDIANTE') window.location.href = 'estudiante.html';
+                    else if (usuario.rol === 'GESTOR_UNIVERSITARIO') window.location.href = 'gestion.html';
+                    else if (usuario.rol === 'GESTOR_EMPRESARIAL') window.location.href = 'empresa.html';
+                    else alert("Rol desconocido");
+                } else {
+                    mostrarError(errorDiv, "Usuario o contraseña incorrectos");
+                }
+            } catch (err) { mostrarError(errorDiv, "Error de conexión"); }
+        }
+
+        // --- LOGICA REGISTRO ---
+        async function handleRegister(e) {
+            e.preventDefault();
+            const email = document.getElementById('reg_email').value;
+            const password = document.getElementById('reg_password').value;
+            const rol = document.getElementById('reg_rol').value;
+            const errorDiv = document.getElementById('regError');
+            const successDiv = document.getElementById('regSuccess');
+
+            if(!rol) { mostrarError(errorDiv, "Debes seleccionar un rol"); return; }
+
+            try {
+                const res = await fetch('/api/auth/registro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, rol })
+                });
+
+                if (res.ok) {
+                    document.getElementById('reg_email').value = "";
+                    document.getElementById('reg_password').value = "";
+                    successDiv.style.display = 'block';
+                    errorDiv.style.display = 'none';
+                    
+                    setTimeout(() => {
+                        toggleForms(); 
+                        document.getElementById('email').value = email;
+                        document.getElementById('regSuccess').style.display = 'none';
+                    }, 2000);
+                } else {
+                    const txt = await res.text();
+                    mostrarError(errorDiv, "Error: " + txt);
+                }
+            } catch (err) { mostrarError(errorDiv, "Error de conexión"); }
+        }
+
+        function mostrarError(div, msg) { div.innerText = msg; div.style.display = 'block'; }
+    </script>
+</body>
+</html>

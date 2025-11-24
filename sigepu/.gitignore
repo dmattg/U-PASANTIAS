@@ -1,0 +1,39 @@
+# --- Maven (Archivos de compilación) ---
+target/
+*.log
+
+# --- NetBeans (Archivos específicos del IDE) ---
+# Ignorar configuraciones privadas del usuario, pero mantener la config del proyecto
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# --- Java (Archivos binarios y temporales) ---
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# --- Spring Boot / Eclipse / VS Code / IntelliJ (Por si acaso cambias de IDE) ---
+.classpath
+.project
+.settings/
+.sts4-cache/
+bin/
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# --- Sistema Operativo ---
+Thumbs.db
+.DS_Store
+
+# --- Seguridad (Archivos que nunca deben subirse) ---
+.env
+secrets.properties

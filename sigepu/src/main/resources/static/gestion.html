@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión Académica - SIGEPU</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f4f9; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 15px 30px; border-radius: 8px; }
+        .btn-logout { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+        
+        .card { background: white; border: 1px solid #ddd; padding: 20px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid orange; }
+        .btn-approve { background: #17a2b8; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer; }
+        .btn-reject { background: #dc3545; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer; }
+        .btn-confirm { background: #6610f2; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>🏛️ Panel de Gestión Universitaria</h2>
+        <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+    </div>
+
+    <div id="gestionList">Cargando solicitudes...</div>
+
+    <script>
+        const sesion = localStorage.getItem('usuario_sigepu');
+        if (!sesion) window.location.href = 'login.html';
+
+        cargarGestion();
+
+        async function cargarGestion() {
+            const lista = document.getElementById('gestionList');
+            try {
+                const res = await fetch('/api/aplicaciones/pendientes');
+                const apps = await res.json();
+                
+                const appsAtencion = apps.filter(a => a.estadoUniversidad === 'PENDIENTE' || a.estadoUniversidad === 'SOLICITUD_CANCELACION');
+
+                if(appsAtencion.length === 0) {
+                    lista.innerHTML = "<p>✅ No hay tareas pendientes.</p>";
+                    return;
+                }
+
+                let html = '';
+                appsAtencion.forEach(a => {
+                    let botones;
+                    if (a.estadoUniversidad === 'PENDIENTE') {
+                        botones = `
+                            <button class="btn-approve" onclick="gestionar(${a.id}, 'APROBAR')">👍 Aprobar</button>
+                            <button class="btn-reject" onclick="gestionar(${a.id}, 'RECHAZAR')">👎 Rechazar</button>
+                        `;
+                    } else {
+                        botones = `<button class="btn-confirm" onclick="gestionar(${a.id}, 'CONFIRMAR_CANCELACION')">✅ Aceptar Cancelación</button>`;
+                    }
+
+                    html += `
+                    <div class="card">
+                        <h3>Solicitud #${a.id} (${a.estadoUniversidad})</h3>
+                        <p><strong>Estudiante:</strong> ${a.estudiante.nombre} ${a.estudiante.apellido}</p>
+                        <p><strong>Pasantía:</strong> ${a.pasantia.titulo}</p>
+                        ${botones}
+                    </div>`;
+                });
+                lista.innerHTML = html;
+            } catch (e) { console.error(e); }
+        }
+
+        async function gestionar(id, accion) {
+            await fetch(`/api/aplicaciones/${id}/estado?accion=${accion}`, { method: 'PUT' });
+            cargarGestion();
+        }
+
+        function logout() {
+            localStorage.removeItem('usuario_sigepu');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
