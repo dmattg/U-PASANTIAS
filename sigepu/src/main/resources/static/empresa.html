@@ -2,66 +2,70 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Empresarial - SIGEPU</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f4f4f9; color: #333; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 30px; border-radius: 8px; margin-bottom: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f4f9; color: #333; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .profile-header { display: flex; align-items: center; gap: 15px; }
+        .avatar-container { position: relative; width: 60px; height: 60px; }
+        .avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .avatar-upload { position: absolute; bottom: 0; right: 0; background: #007bff; color: white; width: 20px; height: 20px; border-radius: 50%; text-align: center; line-height: 20px; font-size: 12px; cursor: pointer; }
+        .hidden-input { display: none; }
         .btn-logout { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
-        
-        .container { display: flex; gap: 20px; }
-        .left-column { flex: 6; }
-        .right-column { flex: 4; }
 
-        .panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .container { display: flex; gap: 20px; }
+        .left-column { flex: 6; display: flex; flex-direction: column; gap: 20px; }
+        .right-column { flex: 4; }
+        .panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        input, textarea, select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn-primary { background: #007bff; color: white; width: 100%; padding: 10px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
-        
-        /* Tarjetas */
+        input, textarea, select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; }
+        label { font-weight: bold; font-size: 0.9em; margin-bottom: 5px; display: block; }
+        .btn-save { background: #007bff; color: white; width: 100%; padding: 10px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
+
         .card { background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #dee2e6; position: relative; }
         .card-offer { border-left: 5px solid #6610f2; }
-        .card-offer.inactive { border-left: 5px solid #6c757d; opacity: 0.8; background: #eaeaea; }
-        .card-candidate { border-left: 5px solid #28a745; background-color: #fff; cursor: pointer; transition: transform 0.2s; }
-        .card-candidate:hover { transform: scale(1.02); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-
-        /* Botones pequeños */
-        .btn-sm { padding: 4px 8px; font-size: 0.85em; border-radius: 3px; border: none; cursor: pointer; color: white; margin-right: 5px; }
+        .card-offer.inactive { border-left: 5px solid #6c757d; opacity: 0.7; background: #eaeaea; }
+        .card-candidate { border-left: 5px solid #28a745; background-color: #fff; cursor: pointer; }
+        
+        .btn-sm { padding: 4px 8px; font-size: 0.85em; border-radius: 3px; border: none; cursor: pointer; color: white; margin-left: 5px; }
         .btn-edit { background: #ffc107; color: #333; }
         .btn-toggle-on { background: #28a745; }
         .btn-toggle-off { background: #6c757d; }
 
-        /* MODAL */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 500px; position: relative; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px; position: relative; }
         .close-modal { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #aaa; }
-        
-        .detail-row { margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .detail-label { font-weight: bold; color: #555; }
-        
         .action-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-hire { flex: 1; background: #28a745; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-discard { flex: 1; background: #dc3545; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-hire { flex: 1; background: #28a745; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
+        .btn-discard { flex: 1; background: #dc3545; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2 id="welcomeMsg">Panel de Empresa</h2>
+        <div class="profile-header">
+            <div class="avatar-container">
+                <img src="https://via.placeholder.com/60" id="imgPerfil" class="avatar" alt="Perfil">
+                <label for="fileInput" class="avatar-upload">📷</label>
+                <input type="file" id="fileInput" class="hidden-input" accept="image/*" onchange="subirFoto()">
+            </div>
+            <div>
+                <h2 id="welcomeMsg" style="margin:0;">Cargando...</h2>
+                <small style="color:#666; cursor:pointer; text-decoration:underline" onclick="abrirEditarPerfil()">✏️ Editar mis datos</small>
+            </div>
+        </div>
         <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
     </div>
 
     <div class="container">
         <div class="left-column">
             <div class="panel">
-                <h3 id="formTitle">➕ Publicar Nueva Pasantía</h3>
-                <input type="hidden" id="editId"> <label>Título del Puesto:</label>
-                <input type="text" id="titulo" placeholder="Ej: Programador Jr">
-                
-                <label>Descripción:</label>
-                <textarea id="desc" rows="3" placeholder="Requisitos..."></textarea>
-                
-                <label>Carrera Requerida:</label>
+                <h3 id="formTitle" style="margin-top:0">➕ Publicar Nueva Pasantía</h3>
+                <input type="hidden" id="editId">
+                <label>Título:</label> <input type="text" id="titulo" placeholder="Ej: Programador Jr">
+                <label>Descripción:</label> <textarea id="desc" rows="3" placeholder="Requisitos..."></textarea>
+                <label>Carrera:</label>
                 <select id="carrera">
                     <option value="1">Ingeniería en Sistemas</option>
                     <option value="2">Ingeniería Industrial</option>
@@ -71,23 +75,33 @@
                     <option value="7">Ciencias Jurídicas</option>
                     <option value="9">Psicología</option>
                 </select>
-                
                 <div style="display:flex; gap:10px">
-                    <button class="btn-primary" id="btnSave" onclick="guardarOferta()">Publicar Oferta</button>
-                    <button class="btn-primary" id="btnCancelEdit" onclick="cancelarEdicion()" style="background:#6c757d; display:none;">Cancelar</button>
+                    <button class="btn-save" id="btnSave" onclick="guardarOferta()">Publicar Oferta</button>
+                    <button class="btn-save" id="btnCancelEdit" onclick="cancelarEdicion()" style="background:#6c757d; display:none;">Cancelar</button>
                 </div>
             </div>
-
             <div class="panel">
-                <h3>📦 Mis Ofertas</h3>
+                <h3 style="margin-top:0">📦 Mis Ofertas Activas</h3>
                 <div id="ofertasList">Cargando...</div>
             </div>
         </div>
-
         <div class="right-column">
             <div class="panel">
-                <h3>👥 Candidatos (Click para ver)</h3>
+                <h3 style="margin-top:0">👥 Candidatos Aprobados</h3>
+                <p style="font-size:0.9em; color:#666">Validados por la UTEC.</p>
                 <div id="candidatosList">Cargando...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalPerfil" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Editar Datos</h3>
+            <label>Nombre Comercial:</label> <input type="text" id="edit_nombre">
+            <label>Nueva Contraseña:</label> <input type="password" id="edit_pass" placeholder="Dejar vacía para no cambiar">
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button onclick="guardarCambiosPerfil()" class="btn-save" style="background:#28a745; flex:1;">Guardar</button>
+                <button onclick="document.getElementById('modalPerfil').style.display='none'" class="btn-save" style="background:#dc3545; flex:1;">Cancelar</button>
             </div>
         </div>
     </div>
@@ -95,26 +109,11 @@
     <div id="modalEstudiante" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="cerrarModal()">&times;</span>
-            <h2 style="margin-top:0; color:#007bff">Perfil del Candidato</h2>
-            
-            <div class="detail-row">
-                <div class="detail-label">Nombre:</div>
-                <div id="m_nombre"></div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Carrera:</div>
-                <div id="m_carrera"></div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Aplica a:</div>
-                <div id="m_puesto"></div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Correo de contacto:</div>
-                <div id="m_email" style="color:#007bff">Obtenido de su perfil...</div>
-            </div>
-
-            <div id="modalActions" class="action-buttons">
+            <h2 style="margin-top:0; color:#007bff">Candidato</h2>
+            <p><strong>Nombre:</strong> <span id="m_nombre"></span></p>
+            <p><strong>Carrera:</strong> <span id="m_carrera"></span></p>
+            <p><strong>Puesto:</strong> <span id="m_puesto"></span></p>
+            <div class="action-buttons">
                 <button class="btn-hire" onclick="decidirCandidato('CONTRATAR')">✅ CONTRATAR</button>
                 <button class="btn-discard" onclick="decidirCandidato('DESCARTAR')">❌ DESCARTAR</button>
             </div>
@@ -122,181 +121,92 @@
     </div>
 
     <script>
-        let ID_EMPRESA = null;
-        let APP_SELECCIONADA = null; // ID de la aplicación abierta en el modal
+        let ID_EMPRESA = null, ID_USUARIO = null, APP_SELECCIONADA = null;
 
         async function iniciar() {
             const sesion = localStorage.getItem('usuario_sigepu');
             if (!sesion) { window.location.href = 'login.html'; return; }
-            
             const usuario = JSON.parse(sesion);
-            
+            if (usuario.rol !== 'GESTOR_EMPRESARIAL') { alert("Acceso denegado"); window.location.href = 'login.html'; return; }
+            ID_USUARIO = usuario.id;
             try {
                 const res = await fetch(`/api/empresas/usuario/${usuario.id}`);
                 if (res.ok) {
                     const empresa = await res.json();
                     ID_EMPRESA = empresa.id;
                     document.getElementById('welcomeMsg').innerText = `Empresa: ${empresa.nombre}`;
-                    cargarDatos();
-                } else alert("Error: Usuario sin empresa asociada.");
-            } catch(e) { console.error(e); }
+                    cargarFotoPerfil(); cargarMisOfertas(); cargarCandidatos();
+                } else alert("Error empresa");
+            } catch(e) {}
         }
-
         iniciar();
 
-        function cargarDatos() { cargarMisOfertas(); cargarCandidatos(); }
+        // Perfil
+        async function cargarFotoPerfil() {
+            try { const res = await fetch(`/api/perfil/${ID_USUARIO}/foto`); if(res.ok) document.getElementById('imgPerfil').src = (await res.json()).url; } catch(e){}
+        }
+        async function subirFoto() {
+            const file = document.getElementById('fileInput').files[0]; if(!file) return;
+            const formData = new FormData(); formData.append("file", file);
+            try { const res = await fetch(`/api/perfil/${ID_USUARIO}/foto`, {method:'POST', body:formData}); if(res.ok) document.getElementById('imgPerfil').src = (await res.json()).url; } catch(e){}
+        }
+        function abrirEditarPerfil() { document.getElementById('modalPerfil').style.display = 'flex'; }
+        async function guardarCambiosPerfil() {
+            const datos = { nombre: document.getElementById('edit_nombre').value, password: document.getElementById('edit_pass').value };
+            if(!datos.nombre) delete datos.nombre;
+            try { const res = await fetch(`/api/perfil/${ID_USUARIO}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos)}); if(res.ok){alert("Actualizado"); location.reload();} } catch(e){}
+        }
 
-        // --- GESTIÓN DE OFERTAS ---
-
+        // Ofertas
         async function cargarMisOfertas() {
             try {
                 const res = await fetch(`/api/pasantias/empresa/${ID_EMPRESA}`);
                 const ofertas = await res.json();
-                
                 let html = '';
-                if (ofertas.length === 0) html = "<p>No hay ofertas.</p>";
-                
                 ofertas.forEach(p => {
-                    const estadoClass = p.activa ? '' : 'inactive';
-                    const estadoTexto = p.activa ? 'Activa' : 'Inactiva';
-                    const btnToggleClass = p.activa ? 'btn-toggle-off' : 'btn-toggle-on';
-                    const btnToggleText = p.activa ? 'Desactivar' : 'Activar';
-
-                    html += `
-                    <div class="card card-offer ${estadoClass}">
-                        <div style="display:flex; justify-content:space-between">
-                            <h4 style="margin:0">${p.titulo} <small>(${estadoTexto})</small></h4>
-                            <div>
-                                <button class="btn-sm btn-edit" onclick='cargarParaEditar(${JSON.stringify(p)})'>✏️</button>
-                                <button class="btn-sm ${btnToggleClass}" onclick="toggleEstado(${p.id})">${btnToggleText}</button>
-                            </div>
-                        </div>
-                        <p style="margin:5px 0">${p.descripcion}</p>
-                        <small style="color:#666">🎓 ${p.carreraRequerida.nombre}</small>
-                    </div>`;
+                    const active = p.activa, cl = active?'':'inactive', txt=active?'Activa':'Inactiva', btnCl=active?'btn-toggle-off':'btn-toggle-on', btnTx=active?'Desactivar':'Activar';
+                    html += `<div class="card card-offer ${cl}"><div style="display:flex; justify-content:space-between"><h4>${p.titulo} <small>(${txt})</small></h4><div><button class="btn-sm btn-edit" onclick='cargarEdit(${JSON.stringify(p)})'>✏️</button><button class="btn-sm ${btnCl}" onclick="toggle(${p.id})">${btnTx}</button></div></div><p>${p.descripcion}</p><small>${p.carreraRequerida.nombre}</small></div>`;
                 });
-                document.getElementById('ofertasList').innerHTML = html;
-            } catch (e) { console.error(e); }
+                document.getElementById('ofertasList').innerHTML = html || "<p>Sin ofertas.</p>";
+            } catch(e){}
         }
-
         async function guardarOferta() {
-            const idEdit = document.getElementById('editId').value;
-            const datos = {
-                titulo: document.getElementById('titulo').value,
-                descripcion: document.getElementById('desc').value,
-                idEmpresa: ID_EMPRESA,
-                idCarreraRequerida: document.getElementById('carrera').value
-            };
-
-            let url = '/api/pasantias';
-            let method = 'POST';
-
-            if (idEdit) { // MODO EDICIÓN
-                url = `/api/pasantias/${idEdit}`;
-                method = 'PUT';
-            }
-
-            try {
-                const res = await fetch(url, {
-                    method: method,
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(datos)
-                });
-                
-                if(res.ok) {
-                    alert(idEdit ? "Oferta actualizada" : "Oferta publicada");
-                    cancelarEdicion(); // Limpiar form
-                    cargarMisOfertas();
-                } else alert("Error al guardar");
-            } catch(e) { alert("Error de conexión"); }
+            const id = document.getElementById('editId').value;
+            const datos = { titulo: document.getElementById('titulo').value, descripcion: document.getElementById('desc').value, idEmpresa: ID_EMPRESA, idCarreraRequerida: document.getElementById('carrera').value };
+            let url = '/api/pasantias', m = 'POST'; if(id){ url+=`/${id}`; m='PUT'; }
+            try { const res = await fetch(url, {method:m, headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos)}); if(res.ok){ alert("Guardado"); cancelarEdicion(); cargarMisOfertas(); } } catch(e){}
         }
-
-        function cargarParaEditar(pasantia) {
-            document.getElementById('formTitle').innerText = "✏️ Editando Pasantía";
-            document.getElementById('editId').value = pasantia.id;
-            document.getElementById('titulo').value = pasantia.titulo;
-            document.getElementById('desc').value = pasantia.descripcion;
-            document.getElementById('carrera').value = pasantia.carreraRequerida.id;
-            
-            document.getElementById('btnSave').innerText = "Guardar Cambios";
-            document.getElementById('btnCancelEdit').style.display = 'inline-block';
-            window.scrollTo(0,0);
+        function cargarEdit(p) {
+            document.getElementById('formTitle').innerText = "✏️ Editando"; document.getElementById('editId').value = p.id;
+            document.getElementById('titulo').value = p.titulo; document.getElementById('desc').value = p.descripcion; document.getElementById('carrera').value = p.carreraRequerida.id;
+            document.getElementById('btnSave').innerText = "Guardar"; document.getElementById('btnCancelEdit').style.display = 'inline-block';
         }
-
         function cancelarEdicion() {
-            document.getElementById('formTitle').innerText = "➕ Publicar Nueva Pasantía";
-            document.getElementById('editId').value = "";
-            document.getElementById('titulo').value = "";
-            document.getElementById('desc').value = "";
-            document.getElementById('btnSave').innerText = "Publicar Oferta";
-            document.getElementById('btnCancelEdit').style.display = 'none';
+            document.getElementById('formTitle').innerText = "➕ Nueva Oferta"; document.getElementById('editId').value = "";
+            document.getElementById('titulo').value = ""; document.getElementById('desc').value = "";
+            document.getElementById('btnSave').innerText = "Publicar"; document.getElementById('btnCancelEdit').style.display = 'none';
         }
+        async function toggle(id) { await fetch(`/api/pasantias/${id}/toggle`, {method:'PUT'}); cargarMisOfertas(); }
 
-        async function toggleEstado(id) {
-            await fetch(`/api/pasantias/${id}/toggle`, { method: 'PUT' });
-            cargarMisOfertas();
-        }
-
-        // --- GESTIÓN DE CANDIDATOS ---
-
+        // Candidatos
         async function cargarCandidatos() {
             try {
                 const res = await fetch(`/api/aplicaciones/empresa/${ID_EMPRESA}/aprobados`);
-                const apps = await res.json();
-                
+                const apps = (await res.json()).filter(a => a.estadoUniversidad === 'APROBADO');
                 let html = '';
-                // Filtramos solo los que están en estado APROBADO (listos para entrevista)
-                // Opcional: Podríamos mostrar también los CONTRATADOS en otra lista
-                const pendientes = apps.filter(a => a.estadoUniversidad === 'APROBADO');
-
-                if (pendientes.length === 0) html = "<p>No hay candidatos pendientes.</p>";
-                
-                pendientes.forEach(a => {
-                    // Pasamos el objeto completo al onclick para llenar el modal
-                    // OJO: JSON.stringify en HTML puede dar problemas con comillas, mejor usar IDs
-                    // o limpiar comillas. Para este MVP simple, usaremos un truco:
-                    // Guardamos en memoria o pasamos datos simples.
-                    
-                    html += `
-                    <div class="card card-candidate" onclick="abrirModal('${a.estudiante.nombre} ${a.estudiante.apellido}', '${a.estudiante.carrera.nombre}', '${a.pasantia.titulo}', ${a.id})">
-                        <h4 style="margin:0">👤 ${a.estudiante.nombre} ${a.estudiante.apellido}</h4>
-                        <small>Puesto: ${a.pasantia.titulo}</small><br>
-                        <small style="color:#28a745">👉 Click para gestionar</small>
-                    </div>`;
-                });
-                document.getElementById('candidatosList').innerHTML = html;
-            } catch (e) { console.error(e); }
+                apps.forEach(a => html += `<div class="card card-candidate" onclick="abrirModal('${a.estudiante.nombre} ${a.estudiante.apellido}', '${a.estudiante.carrera.nombre}', '${a.pasantia.titulo}', ${a.id})"><h4>👤 ${a.estudiante.nombre}</h4><small>${a.pasantia.titulo}</small></div>`);
+                document.getElementById('candidatosList').innerHTML = html || "<p>Sin candidatos.</p>";
+            } catch(e){}
         }
-
-        function abrirModal(nombre, carrera, puesto, idApp) {
-            document.getElementById('m_nombre').innerText = nombre;
-            document.getElementById('m_carrera').innerText = carrera;
-            document.getElementById('m_puesto').innerText = puesto;
-            // Simulacion de email (en un sistema real vendría en el objeto)
-            document.getElementById('m_email').innerText = nombre.toLowerCase().replace(" ", ".") + "@estudiante.com";
-            
-            APP_SELECCIONADA = idApp;
-            document.getElementById('modalEstudiante').style.display = 'flex';
+        function abrirModal(n, c, p, id) {
+            document.getElementById('m_nombre').innerText = n; document.getElementById('m_carrera').innerText = c; document.getElementById('m_puesto').innerText = p;
+            APP_SELECCIONADA = id; document.getElementById('modalEstudiante').style.display = 'flex';
         }
-
-        function cerrarModal() {
-            document.getElementById('modalEstudiante').style.display = 'none';
-            APP_SELECCIONADA = null;
+        function cerrarModal() { document.getElementById('modalEstudiante').style.display = 'none'; }
+        async function decidirCandidato(acc) {
+            if(!confirm("¿Confirmar?")) return;
+            try { const res = await fetch(`/api/aplicaciones/${APP_SELECCIONADA}/estado?accion=${acc}`, {method:'PUT'}); if(res.ok){ alert("Hecho"); cerrarModal(); cargarCandidatos(); } } catch(e){}
         }
-
-        async function decidirCandidato(accion) {
-            if(!confirm(`¿Estás seguro de ${accion} a este candidato?`)) return;
-            
-            try {
-                const res = await fetch(`/api/aplicaciones/${APP_SELECCIONADA}/estado?accion=${accion}`, { method: 'PUT' });
-                if(res.ok) {
-                    alert("Decisión registrada exitosamente.");
-                    cerrarModal();
-                    cargarCandidatos();
-                } else alert("Error al procesar.");
-            } catch(e) { alert("Error de conexión"); }
-        }
-
         function logout() { localStorage.removeItem('usuario_sigepu'); window.location.href = 'login.html'; }
     </script>
 </body>

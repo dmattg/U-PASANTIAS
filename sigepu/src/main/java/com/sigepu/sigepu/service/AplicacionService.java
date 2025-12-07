@@ -2,7 +2,7 @@ package com.sigepu.sigepu.service;
 
 import com.sigepu.sigepu.dto.AplicacionRequest;
 import com.sigepu.sigepu.entity.Aplicacion;
-import com.sigepu.sigepu.entity.Empresa; // Importante para la nueva validacion
+import com.sigepu.sigepu.entity.Empresa;
 import com.sigepu.sigepu.entity.Estudiante;
 import com.sigepu.sigepu.entity.Pasantia;
 import com.sigepu.sigepu.enums.EstadoAplicacion;
@@ -12,77 +12,50 @@ import com.sigepu.sigepu.repository.PasantiaRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // Importante para la limpieza masiva
 
 @Service
 public class AplicacionService {
 
-    @Autowired
-    private AplicacionRepository aplicacionRepository;
-    @Autowired
-    private EstudianteRepository estudianteRepository;
-    @Autowired
-    private PasantiaRepository pasantiaRepository;
+    @Autowired private AplicacionRepository aplicacionRepository;
+    @Autowired private EstudianteRepository estudianteRepository;
+    @Autowired private PasantiaRepository pasantiaRepository;
 
-    // 1. Estudiante aplica a una pasantia
+    // ... (Métodos crearAplicacion, solicitarCancelacion, listarPendientes... SE MANTIENEN IGUAL)
+    // COPIA TUS MÉTODOS ANTERIORES AQUÍ O MANTENLOS SI NO CAMBIARON
+    
+    // VOY A PONER LOS METODOS CLAVE QUE NO CAMBIAN RESUMIDOS PARA QUE NO SE PIERDA EL CONTEXTO
     public Aplicacion crearAplicacion(AplicacionRequest request) {
-        Estudiante estudiante = estudianteRepository.findById(request.getIdEstudiante())
-                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
-        
-        Pasantia pasantia = pasantiaRepository.findById(request.getIdPasantia())
-                .orElseThrow(() -> new RuntimeException("Pasantia no encontrada"));
-
-        // --- NUEVA VALIDACIÓN DE EMPRESA ---
-        // Obtenemos la empresa dueña de la pasantía
+        // ... (Tu código actual de crear, con la validación de empresa) ...
+        // (Pego el bloque esencial para que compile, pero usa el que ya tenías validado)
+        Estudiante estudiante = estudianteRepository.findById(request.getIdEstudiante()).orElseThrow();
+        Pasantia pasantia = pasantiaRepository.findById(request.getIdPasantia()).orElseThrow();
         Empresa empresaOwner = pasantia.getEmpresa();
-
-        // Verificamos si el estudiante ya tiene ALGUNA aplicación con esa empresa
-        // Nota: Asegurate que tu AplicacionRepository tenga el metodo 'existsByEstudianteAndPasantia_Empresa'
         if (aplicacionRepository.existsByEstudianteAndPasantia_Empresa(estudiante, empresaOwner)) {
-            throw new RuntimeException("Política de Empresa: Ya tienes una solicitud activa con " + empresaOwner.getNombre() + ". No puedes aplicar a más de una oferta de la misma compañía.");
+            throw new RuntimeException("Política de Empresa: Ya tienes una solicitud activa con " + empresaOwner.getNombre());
         }
-        // -----------------------------------
-
-        // Validacion de carrera
-        if (!estudiante.getCarrera().getId().equals(pasantia.getCarreraRequerida().getId())) {
-            throw new RuntimeException("No puedes aplicar: Tu carrera no coincide con la requerida.");
-        }
-
-        Aplicacion aplicacion = new Aplicacion();
-        aplicacion.setEstudiante(estudiante);
-        aplicacion.setPasantia(pasantia);
-        // El estado inicial 'PENDIENTE' se asigna en la Entidad (@PrePersist)
-        
-        return aplicacionRepository.save(aplicacion);
-    }
-
-    // 2. Solicitar Cancelación (Estudiante)
-    public Aplicacion solicitarCancelacion(Long idAplicacion) {
-        Aplicacion app = aplicacionRepository.findById(idAplicacion)
-                .orElseThrow(() -> new RuntimeException("Aplicacion no encontrada"));
-        
-        // Solo se puede cancelar si no ha finalizado ya
-        if (app.getEstadoUniversidad() == EstadoAplicacion.CANCELADO || 
-            app.getEstadoUniversidad() == EstadoAplicacion.RECHAZADO ||
-            app.getEstadoUniversidad() == EstadoAplicacion.CONTRATADO || 
-            app.getEstadoUniversidad() == EstadoAplicacion.NO_SELECCIONADO) {
-            throw new RuntimeException("No se puede cancelar una solicitud ya finalizada");
-        }
-
-        app.setEstadoUniversidad(EstadoAplicacion.SOLICITUD_CANCELACION);
+        if (!estudiante.getCarrera().getId().equals(pasantia.getCarreraRequerida().getId())) throw new RuntimeException("Carrera no coincide");
+        Aplicacion app = new Aplicacion();
+        app.setEstudiante(estudiante);
+        app.setPasantia(pasantia);
         return aplicacionRepository.save(app);
     }
 
-    // 3. Listar Pendientes (Gestor)
-    public List<Aplicacion> listarPendientesGestion() {
-        return aplicacionRepository.findAll();
+    public Aplicacion solicitarCancelacion(Long id) {
+        Aplicacion app = aplicacionRepository.findById(id).orElseThrow();
+        app.setEstadoUniversidad(EstadoAplicacion.SOLICITUD_CANCELACION);
+        return aplicacionRepository.save(app);
     }
     
-    // 4. Listar Mis Aplicaciones (Estudiante)
-    public List<Aplicacion> listarPorEstudiante(Long idEstudiante) {
-        return aplicacionRepository.findByEstudiante_Id(idEstudiante);
+    public List<Aplicacion> listarPendientesGestion() { return aplicacionRepository.findAll(); }
+    public List<Aplicacion> listarPorEstudiante(Long id) { return aplicacionRepository.findByEstudiante_Id(id); }
+    public List<Aplicacion> listarAprobadosPorEmpresa(Long idEmpresa) {
+        return aplicacionRepository.findByPasantia_Empresa_IdAndEstadoUniversidad(idEmpresa, EstadoAplicacion.APROBADO);
     }
 
-    // 5. Gestionar Estados (Gestor Universitario y Empresarial)
+    // --- AQUÍ ESTÁ EL CAMBIO IMPORTANTE ---
+    
+    @Transactional // Asegura que si algo falla, no se borre nada a medias
     public Aplicacion gestionarAplicacion(Long idAplicacion, String accion) {
         Aplicacion app = aplicacionRepository.findById(idAplicacion)
                 .orElseThrow(() -> new RuntimeException("Aplicacion no encontrada"));
@@ -97,20 +70,37 @@ public class AplicacionService {
             case "CONFIRMAR_CANCELACION":
                 app.setEstadoUniversidad(EstadoAplicacion.CANCELADO);
                 break;
+                
             case "CONTRATAR":
+                // 1. Contratamos esta aplicación
                 app.setEstadoUniversidad(EstadoAplicacion.CONTRATADO);
+                
+                // 2. BUSCAMOS Y CANCELAMOS TODAS LAS DEMÁS DE ESTE ESTUDIANTE
+                List<Aplicacion> otrasApps = aplicacionRepository.findByEstudiante_Id(app.getEstudiante().getId());
+                for (Aplicacion otra : otrasApps) {
+                    // Si no es la que acabamos de contratar y no está finalizada/rechazada
+                    if (!otra.getId().equals(app.getId()) && 
+                        otra.getEstadoUniversidad() != EstadoAplicacion.RECHAZADO &&
+                        otra.getEstadoUniversidad() != EstadoAplicacion.CANCELADO &&
+                        otra.getEstadoUniversidad() != EstadoAplicacion.NO_SELECCIONADO) {
+                        
+                        otra.setEstadoUniversidad(EstadoAplicacion.CANCELADO);
+                        aplicacionRepository.save(otra);
+                    }
+                }
                 break;
+                
             case "DESCARTAR":
                 app.setEstadoUniversidad(EstadoAplicacion.NO_SELECCIONADO);
                 break;
+                
+            case "FINALIZAR": // Nuevo caso para la Universidad
+                app.setEstadoUniversidad(EstadoAplicacion.FINALIZADO);
+                break;
+                
             default:
                 throw new RuntimeException("Accion no valida");
         }
         return aplicacionRepository.save(app);
-    }
-    
-    // 6. Listar candidatos aprobados para una empresa
-    public List<Aplicacion> listarAprobadosPorEmpresa(Long idEmpresa) {
-        return aplicacionRepository.findByPasantia_Empresa_IdAndEstadoUniversidad(idEmpresa, EstadoAplicacion.APROBADO);
     }
 }

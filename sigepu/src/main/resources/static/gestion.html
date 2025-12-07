@@ -4,77 +4,134 @@
     <meta charset="UTF-8">
     <title>Gestión Académica - SIGEPU</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f4f9; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 15px 30px; border-radius: 8px; }
-        .btn-logout { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f4f9; color: #333; }
         
-        .card { background: white; border: 1px solid #ddd; padding: 20px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid orange; }
-        .btn-approve { background: #17a2b8; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer; }
-        .btn-reject { background: #dc3545; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer; }
-        .btn-confirm { background: #6610f2; color: white; padding: 5px 10px; border:none; border-radius:4px; cursor:pointer; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .profile-header { display: flex; align-items: center; gap: 15px; }
+        .avatar-container { position: relative; width: 60px; height: 60px; }
+        .avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .avatar-upload { position: absolute; bottom: 0; right: 0; background: #007bff; color: white; width: 20px; height: 20px; border-radius: 50%; text-align: center; line-height: 20px; font-size: 12px; cursor: pointer; }
+        .hidden-input { display: none; }
+        .btn-logout { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+
+        .card { background: white; border: 1px solid #ddd; padding: 20px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid orange; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card h3 { margin-top: 0; margin-bottom: 5px; }
+        
+        button { cursor: pointer; padding: 8px 16px; border: none; border-radius: 4px; color: white; font-weight: bold; margin-right: 5px; }
+        .btn-approve { background: #17a2b8; }
+        .btn-reject { background: #dc3545; }
+        .btn-confirm { background: #6610f2; }
+        .btn-refresh { background: #6c757d; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 300px; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>🏛️ Panel de Gestión Universitaria</h2>
+        <div class="profile-header">
+            <div class="avatar-container">
+                <img src="https://via.placeholder.com/60" id="imgPerfil" class="avatar" alt="Perfil">
+                <label for="fileInput" class="avatar-upload">📷</label>
+                <input type="file" id="fileInput" class="hidden-input" accept="image/*" onchange="subirFoto()">
+            </div>
+            <div>
+                <h2 style="margin:0;">Gestión Académica</h2>
+                <small style="color:#666; cursor:pointer; text-decoration:underline" onclick="abrirEditarPerfil()">✏️ Editar mi perfil</small>
+            </div>
+        </div>
         <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
     </div>
 
-    <div id="gestionList">Cargando solicitudes...</div>
+    <div style="max-width: 800px; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2>Panel de Control</h2>
+            <button class="btn-refresh" onclick="cargarGestion()">🔄 Actualizar</button>
+        </div>
+        <div id="gestionList">Cargando...</div>
+    </div>
+
+    <div id="modalPerfil" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Editar Datos</h3>
+            <label>Nueva Contraseña:</label>
+            <input type="password" id="edit_pass" placeholder="Dejar vacía para no cambiar">
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button onclick="guardarCambiosPerfil()" style="background:#28a745; color:white; border:none; padding:8px; flex:1;">Guardar</button>
+                <button onclick="document.getElementById('modalPerfil').style.display='none'" style="background:#dc3545; color:white; border:none; padding:8px; flex:1;">Cancelar</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const sesion = localStorage.getItem('usuario_sigepu');
-        if (!sesion) window.location.href = 'login.html';
+        let ID_USUARIO = null;
 
-        cargarGestion();
+        async function iniciar() {
+            const sesion = localStorage.getItem('usuario_sigepu');
+            if (!sesion) { window.location.href = 'login.html'; return; }
+            const usuario = JSON.parse(sesion);
+            if (usuario.rol !== 'GESTOR_UNIVERSITARIO') { alert("Acceso denegado"); window.location.href = 'login.html'; return; }
+            ID_USUARIO = usuario.id;
+            cargarFotoPerfil();
+            cargarGestion();
+        }
+        iniciar();
 
+        // Perfil
+        async function cargarFotoPerfil() {
+            try { const res = await fetch(`/api/perfil/${ID_USUARIO}/foto`); if(res.ok) document.getElementById('imgPerfil').src = (await res.json()).url; } catch(e){}
+        }
+        async function subirFoto() {
+            const file = document.getElementById('fileInput').files[0]; if(!file) return;
+            const formData = new FormData(); formData.append("file", file);
+            try { const res = await fetch(`/api/perfil/${ID_USUARIO}/foto`, {method:'POST', body:formData}); if(res.ok) document.getElementById('imgPerfil').src = (await res.json()).url; } catch(e){}
+        }
+        function abrirEditarPerfil() { document.getElementById('modalPerfil').style.display = 'flex'; }
+        async function guardarCambiosPerfil() {
+            const pass = document.getElementById('edit_pass').value; if(!pass) return;
+            try { const res = await fetch(`/api/perfil/${ID_USUARIO}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pass})}); if(res.ok){ alert("Actualizado"); location.reload(); } } catch(e){}
+        }
+
+        // Gestión
         async function cargarGestion() {
             const lista = document.getElementById('gestionList');
             try {
                 const res = await fetch('/api/aplicaciones/pendientes');
                 const apps = await res.json();
                 
-                const appsAtencion = apps.filter(a => a.estadoUniversidad === 'PENDIENTE' || a.estadoUniversidad === 'SOLICITUD_CANCELACION');
+                const pendientes = apps.filter(a => a.estadoUniversidad === 'PENDIENTE' || a.estadoUniversidad === 'SOLICITUD_CANCELACION');
+                const activos = apps.filter(a => a.estadoUniversidad === 'CONTRATADO');
 
-                if(appsAtencion.length === 0) {
-                    lista.innerHTML = "<p>✅ No hay tareas pendientes.</p>";
-                    return;
-                }
-
-                let html = '';
-                appsAtencion.forEach(a => {
-                    let botones;
+                let html = `<h3>📥 Solicitudes (${pendientes.length})</h3>`;
+                if(pendientes.length === 0) html += "<p>No hay solicitudes nuevas.</p>";
+                
+                pendientes.forEach(a => {
+                    let btns, borde = 'orange';
                     if (a.estadoUniversidad === 'PENDIENTE') {
-                        botones = `
-                            <button class="btn-approve" onclick="gestionar(${a.id}, 'APROBAR')">👍 Aprobar</button>
-                            <button class="btn-reject" onclick="gestionar(${a.id}, 'RECHAZAR')">👎 Rechazar</button>
-                        `;
+                        btns = `<button class="btn-approve" onclick="gestionar(${a.id}, 'APROBAR')">👍 Aprobar</button><button class="btn-reject" onclick="gestionar(${a.id}, 'RECHAZAR')">👎 Rechazar</button>`;
                     } else {
-                        botones = `<button class="btn-confirm" onclick="gestionar(${a.id}, 'CONFIRMAR_CANCELACION')">✅ Aceptar Cancelación</button>`;
+                        borde = 'red'; btns = `<p style="color:red; font-weight:bold;">⚠️ Pide Cancelar</p><button class="btn-confirm" onclick="gestionar(${a.id}, 'CONFIRMAR_CANCELACION')">✅ Aceptar Cancelación</button>`;
                     }
-
-                    html += `
-                    <div class="card">
-                        <h3>Solicitud #${a.id} (${a.estadoUniversidad})</h3>
-                        <p><strong>Estudiante:</strong> ${a.estudiante.nombre} ${a.estudiante.apellido}</p>
-                        <p><strong>Pasantía:</strong> ${a.pasantia.titulo}</p>
-                        ${botones}
-                    </div>`;
+                    html += `<div class="card" style="border-left-color:${borde}"><h4>Solicitud #${a.id}</h4><p>👤 ${a.estudiante.nombre} ${a.estudiante.apellido}</p><p>🏢 ${a.pasantia.empresa.nombre}</p><div>${btns}</div></div>`;
                 });
+
+                html += `<hr style="margin:30px 0;"><h3>🎓 Pasantías Activas (${activos.length})</h3><p style="color:#666">Dar por finalizada y aprobar horas.</p>`;
+                if(activos.length === 0) html += "<p>Ninguna activa.</p>";
+
+                activos.forEach(a => {
+                    html += `<div class="card" style="border-left-color:#28a745; background:#f0fff4"><h4>Activa #${a.id}: ${a.estudiante.nombre}</h4><p>🏢 ${a.pasantia.empresa.nombre}</p><button class="btn-approve" onclick="finalizar(${a.id})">✅ Finalizar y Aprobar Horas</button></div>`;
+                });
+
                 lista.innerHTML = html;
-            } catch (e) { console.error(e); }
+            } catch (e) {}
         }
 
-        async function gestionar(id, accion) {
-            await fetch(`/api/aplicaciones/${id}/estado?accion=${accion}`, { method: 'PUT' });
-            cargarGestion();
-        }
-
-        function logout() {
-            localStorage.removeItem('usuario_sigepu');
-            window.location.href = 'login.html';
-        }
+        async function gestionar(id, acc) { try { const res = await fetch(`/api/aplicaciones/${id}/estado?accion=${acc}`, {method:'PUT'}); if(res.ok) cargarGestion(); } catch(e){} }
+        async function finalizar(id) { if(confirm("¿Finalizar pasantía?")) gestionar(id, 'FINALIZAR'); }
+        function logout() { localStorage.removeItem('usuario_sigepu'); window.location.href = 'login.html'; }
     </script>
 </body>
 </html>

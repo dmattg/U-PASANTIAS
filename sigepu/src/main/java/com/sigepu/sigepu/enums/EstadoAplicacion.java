@@ -1,11 +1,12 @@
 package com.sigepu.sigepu.enums;
 
 public enum EstadoAplicacion {
-    PENDIENTE,             // Esperando revision inicial
-    APROBADO,              // Aprobado por la U
-    RECHAZADO,             // Rechazado por la U
-    SOLICITUD_CANCELACION, // Estudiante pide cancelar
-    CANCELADO,              // Cancelacion confirmada por la U
+    PENDIENTE,
+    APROBADO,
+    RECHAZADO,
+    SOLICITUD_CANCELACION,
+    CANCELADO,
     CONTRATADO,
-    NO_SELECCIONADO
+    NO_SELECCIONADO,
+    FINALIZADO
 }

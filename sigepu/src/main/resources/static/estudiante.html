@@ -5,14 +5,21 @@
     <title>Portal Estudiante - SIGEPU</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f4f9; color: #333; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .btn-logout { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
         
+        /* Encabezado y Perfil */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .profile-header { display: flex; align-items: center; gap: 15px; }
+        .avatar-container { position: relative; width: 60px; height: 60px; }
+        .avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .avatar-upload { position: absolute; bottom: 0; right: 0; background: #007bff; color: white; width: 20px; height: 20px; border-radius: 50%; text-align: center; line-height: 20px; font-size: 12px; cursor: pointer; }
+        .hidden-input { display: none; }
+        .btn-logout { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+
         /* Barra de Filtros */
         .filter-bar { background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; display: flex; align-items: center; gap: 10px; }
         select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; flex-grow: 1; max-width: 300px; }
 
-        /* Formulario Perfil */
+        /* Formulario Perfil Inicial */
         #profileForm { background: white; padding: 30px; max-width: 500px; margin: 0 auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .btn-save { background: #007bff; color: white; width: 100%; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
         input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
@@ -25,14 +32,11 @@
         
         .btn-apply { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-apply:hover { background: #218838; }
-        
         .btn-cancel-req { background: #ffc107; color: #333; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em; margin-top: 5px; }
 
-        /* Badges de Estado */
+        /* Estados */
         .status-container { padding: 10px; background-color: #f8f9fa; border-radius: 6px; margin-top: 10px; border: 1px solid #eee; }
         .status-label { font-weight: bold; font-size: 0.9em; display: block; margin-bottom: 5px; }
-        
-        /* Colores de estado específicos */
         .st-pendiente { color: #d39e00; border-left: 4px solid #ffc107; padding-left: 8px; }
         .st-aprobado { color: #17a2b8; border-left: 4px solid #17a2b8; padding-left: 8px; }
         .st-rechazado { color: #dc3545; border-left: 4px solid #dc3545; padding-left: 8px; }
@@ -40,15 +44,26 @@
         .st-no-seleccionado { color: #6c757d; border-left: 4px solid #6c757d; padding-left: 8px; }
         .st-cancelado { color: #343a40; border-left: 4px solid #343a40; padding-left: 8px; text-decoration: line-through; }
 
+        /* Modal Edición */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 300px; }
+
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div>
-            <h2 id="welcomeMsg" style="margin:0;">Cargando...</h2>
-            <small id="userCareer" style="color:#666;"></small>
+        <div class="profile-header">
+            <div class="avatar-container">
+                <img src="https://via.placeholder.com/60" id="imgPerfil" class="avatar" alt="Perfil">
+                <label for="fileInput" class="avatar-upload">📷</label>
+                <input type="file" id="fileInput" class="hidden-input" accept="image/*" onchange="subirFoto()">
+            </div>
+            <div>
+                <h2 id="welcomeMsg" style="margin:0;">Cargando...</h2>
+                <small id="userCareer" style="color:#666; cursor:pointer; text-decoration:underline" onclick="abrirEditarPerfil()">✏️ Editar mis datos</small>
+            </div>
         </div>
         <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
     </div>
@@ -57,11 +72,8 @@
         <div id="profileForm">
             <h2 style="text-align:center">🚀 ¡Completa tu Perfil!</h2>
             <p>Para ver las pasantías, necesitamos saber quién eres.</p>
-            
-            <label>Nombre:</label>
-            <input type="text" id="p_nombre" placeholder="Ej: Juan">
-            <label>Apellido:</label>
-            <input type="text" id="p_apellido" placeholder="Ej: Perez">
+            <label>Nombre:</label> <input type="text" id="p_nombre" placeholder="Ej: Juan">
+            <label>Apellido:</label> <input type="text" id="p_apellido" placeholder="Ej: Perez">
             <label>Carrera:</label>
             <select id="p_carrera" style="width:100%; padding:10px; margin-bottom:15px;">
                 <option value="1">Ingeniería en Sistemas y Computación</option>
@@ -94,24 +106,41 @@
             </select>
             <button onclick="cargarPasantias()" style="background:#6c757d; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer">🔄</button>
         </div>
-
         <div id="pasantiasList">Cargando...</div>
+    </div>
+
+    <div id="modalPerfil" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Editar Datos</h3>
+            <label>Nuevo Nombre:</label> <input type="text" id="edit_nombre">
+            <label>Nuevo Apellido:</label> <input type="text" id="edit_apellido">
+            <label>Nueva Contraseña (Opcional):</label> <input type="password" id="edit_pass" placeholder="Dejar vacía para no cambiar">
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button onclick="guardarCambiosPerfil()" style="background:#28a745; color:white; border:none; padding:8px; flex:1; cursor:pointer">Guardar</button>
+                <button onclick="document.getElementById('modalPerfil').style.display='none'" style="background:#dc3545; color:white; border:none; padding:8px; flex:1; cursor:pointer">Cancelar</button>
+            </div>
+        </div>
     </div>
 
     <script>
         let ID_ESTUDIANTE = null;
         let ID_USUARIO = null;
-        let MIS_DATOS_GLOBAL = null; // Para guardar todas las pasantias y no pedir al server al filtrar
+        let MIS_DATOS_GLOBAL = null;
 
+        // Validar sesión, rol y perfil
         async function iniciar() {
             const sesion = localStorage.getItem('usuario_sigepu');
             if (!sesion) { window.location.href = 'login.html'; return; }
             const usuario = JSON.parse(sesion);
-            ID_USUARIO = usuario.id;
             
+            if (usuario.rol !== 'ESTUDIANTE') {
+                alert("⛔ Acceso Denegado: Zona de estudiantes.");
+                window.location.href = 'login.html'; return;
+            }
+
+            ID_USUARIO = usuario.id;
             try {
                 const res = await fetch(`/api/estudiantes/usuario/${ID_USUARIO}`);
-                
                 if (res.status === 204 || res.status === 404) {
                     document.getElementById('welcomeMsg').innerText = `Hola, ${usuario.email}`;
                     document.getElementById('profileSection').classList.remove('hidden');
@@ -121,172 +150,137 @@
                     document.getElementById('welcomeMsg').innerText = `Hola, ${estudiante.nombre}`;
                     document.getElementById('userCareer').innerText = estudiante.carrera ? estudiante.carrera.nombre : '';
                     document.getElementById('mainSection').classList.remove('hidden');
+                    cargarFotoPerfil();
                     cargarPasantias();
-                } else {
-                    throw new Error("Error al obtener perfil");
-                }
-            } catch (e) { alert("Error crítico al iniciar: " + e.message); }
+                } else throw new Error("Error perfil");
+            } catch (e) { alert("Error crítico: " + e.message); }
         }
-
         iniciar();
 
-        async function guardarPerfil() {
-            const datos = {
-                nombre: document.getElementById('p_nombre').value,
-                apellido: document.getElementById('p_apellido').value,
-                idCarrera: document.getElementById('p_carrera').value
-            };
+        // Cargar foto
+        async function cargarFotoPerfil() {
             try {
-                const res = await fetch(`/api/estudiantes/usuario/${ID_USUARIO}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(datos)
-                });
-                if(res.ok) { alert("¡Perfil creado!"); location.reload(); }
-                else alert("Error al guardar perfil.");
-            } catch(e) { alert("Error de conexión"); }
+                const res = await fetch(`/api/perfil/${ID_USUARIO}/foto`);
+                if(res.status === 200) { const data = await res.json(); document.getElementById('imgPerfil').src = data.url; }
+            } catch(e) {}
         }
 
+        // Subir foto
+        async function subirFoto() {
+            const file = document.getElementById('fileInput').files[0];
+            if(!file) return;
+            const formData = new FormData(); formData.append("file", file);
+            try {
+                const res = await fetch(`/api/perfil/${ID_USUARIO}/foto`, { method: 'POST', body: formData });
+                if(res.ok) { const data = await res.json(); document.getElementById('imgPerfil').src = data.url; }
+            } catch(e) {}
+        }
+
+        // Modales y formularios
+        function abrirEditarPerfil() { document.getElementById('modalPerfil').style.display = 'flex'; }
+        
+        async function guardarCambiosPerfil() {
+            const datos = { nombre: document.getElementById('edit_nombre').value, apellido: document.getElementById('edit_apellido').value, password: document.getElementById('edit_pass').value };
+            if(!datos.nombre) delete datos.nombre; if(!datos.apellido) delete datos.apellido;
+            try {
+                const res = await fetch(`/api/perfil/${ID_USUARIO}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(datos) });
+                if(res.ok) { alert("Datos actualizados."); location.reload(); }
+            } catch(e) {}
+        }
+
+        async function guardarPerfil() {
+            const datos = { nombre: document.getElementById('p_nombre').value, apellido: document.getElementById('p_apellido').value, idCarrera: document.getElementById('p_carrera').value };
+            try {
+                const res = await fetch(`/api/estudiantes/usuario/${ID_USUARIO}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(datos) });
+                if(res.ok) { alert("Perfil creado."); location.reload(); }
+            } catch(e) {}
+        }
+
+        // Cargar y filtrar ofertas
         async function cargarPasantias() {
             const lista = document.getElementById('pasantiasList');
             const filtro = document.getElementById('filtroCarrera').value;
             
-            // Si ya tenemos datos y solo estamos filtrando, no llamamos al server
             if (!MIS_DATOS_GLOBAL) {
                 lista.innerHTML = "⏳ Cargando datos...";
                 try {
-                    const [resPasantias, resMisApps] = await Promise.all([
-                        fetch('/api/pasantias'),
-                        fetch(`/api/aplicaciones/estudiante/${ID_ESTUDIANTE}`)
-                    ]);
-                    
+                    const [resPasantias, resMisApps] = await Promise.all([ fetch('/api/pasantias'), fetch(`/api/aplicaciones/estudiante/${ID_ESTUDIANTE}`) ]);
                     const pasantias = await resPasantias.json();
                     const misApps = resMisApps.ok ? await resMisApps.json() : [];
-                    
-                    // Guardamos en memoria para filtrar rápido
                     MIS_DATOS_GLOBAL = { pasantias, misApps };
-                } catch (e) {
-                    console.error(e);
-                    lista.innerHTML = "Error cargando datos.";
-                    return;
-                }
+                } catch (e) { lista.innerHTML = "Error cargando datos."; return; }
             }
 
-            // Renderizar con filtro
             const { pasantias, misApps } = MIS_DATOS_GLOBAL;
+            
+            // Verificar si ya fue contratado
+            const activa = misApps.find(a => a.estadoUniversidad === 'CONTRATADO');
+            const finalizada = misApps.find(a => a.estadoUniversidad === 'FINALIZADO');
+
+            if (activa) {
+                lista.innerHTML = `
+                    <div style="background:#d4edda; color:#155724; padding:20px; border-radius:8px; border:1px solid #c3e6cb; text-align:center;">
+                        <h2>🎉 ¡Felicidades! Estás en una Pasantía Activa</h2>
+                        <p>Contratado por: <strong>${activa.pasantia.empresa.nombre}</strong></p>
+                        
+                        <h3 style="margin-top:20px; color:#28a745">${activa.pasantia.titulo}</h3>
+                        <p style="font-style:italic; max-width:600px; margin:0 auto; color:#155724">
+                            "${activa.pasantia.descripcion}"
+                        </p>
+                        <hr style="margin-top:20px; border-top:1px solid #c3e6cb">
+                        <small>Tus otras postulaciones han sido canceladas automáticamente.</small>
+                    </div>`;
+                return;
+            }
+            if (finalizada) {
+                lista.innerHTML = `<div style="background:#cce5ff; color:#004085; padding:20px; border-radius:8px; border:1px solid #b8daff; text-align:center;"><h2>🎓 Pasantía Finalizada</h2><p>Completaste tus horas en: <strong>${finalizada.pasantia.empresa.nombre}</strong></p></div>`;
+                return;
+            }
+
             const mapaApps = {};
             misApps.forEach(a => { if(a.pasantia) mapaApps[a.pasantia.id] = a; });
-
-            let html = '';
-            let contador = 0;
+            let html = '', contador = 0;
 
             pasantias.forEach(p => {
-                // FILTRO POR CARRERA
-                if (filtro !== 'TODAS' && p.carreraRequerida.nombre !== filtro) {
-                    return; // Si no coincide, saltamos esta iteración
-                }
+                if (filtro !== 'TODAS' && p.carreraRequerida.nombre !== filtro) return;
                 contador++;
-
                 const app = mapaApps[p.id];
                 let contenidoEstado;
 
                 if (app) {
-                    // --- LOGICA DE ESTADOS DETALLADA ---
-                    let mensaje = "";
-                    let estilo = "";
-                    let mostrarBotonCancelar = false;
-
+                    let mensaje = "", estilo = "", mostrarBoton = false;
                     switch (app.estadoUniversidad) {
-                        case 'PENDIENTE':
-                            mensaje = "🟡 Solicitud recibida. La Universidad está revisando tus requisitos.";
-                            estilo = "st-pendiente";
-                            mostrarBotonCancelar = true;
-                            break;
-                        case 'RECHAZADO':
-                            mensaje = "🔴 Tu solicitud fue rechazada por la Universidad.";
-                            estilo = "st-rechazado";
-                            break;
-                        case 'APROBADO':
-                            mensaje = "🔵 ¡Aprobado por la U! Tu perfil fue enviado a la empresa para revisión.";
-                            estilo = "st-aprobado";
-                            mostrarBotonCancelar = true;
-                            break;
-                        case 'SOLICITUD_CANCELACION':
-                            mensaje = "🟠 Has solicitado cancelar. Esperando confirmación de la U.";
-                            estilo = "st-pendiente";
-                            break;
-                        case 'CANCELADO':
-                            mensaje = "⚫ Cancelación aceptada. Puedes volver a postularte si lo deseas.";
-                            estilo = "st-cancelado";
-                            break;
-                        case 'CONTRATADO':
-                            mensaje = "🟢 ¡FELICIDADES! La empresa te ha seleccionado para el puesto.";
-                            estilo = "st-contratado";
-                            break;
-                        case 'NO_SELECCIONADO':
-                            mensaje = "⚫ La empresa ha decidido no continuar con tu proceso. ¡Sigue intentando!";
-                            estilo = "st-no-seleccionado";
-                            break;
+                        case 'PENDIENTE': mensaje = "🟡 En revisión"; estilo = "st-pendiente"; mostrarBoton = true; break;
+                        case 'RECHAZADO': mensaje = "🔴 Rechazado"; estilo = "st-rechazado"; break;
+                        case 'APROBADO': mensaje = "🔵 Aprobado por U."; estilo = "st-aprobado"; mostrarBoton = true; break;
+                        case 'SOLICITUD_CANCELACION': mensaje = "🟠 Cancelando..."; estilo = "st-pendiente"; break;
+                        case 'CANCELADO': mensaje = "⚫ Cancelada"; estilo = "st-cancelado"; break;
+                        case 'NO_SELECCIONADO': mensaje = "⚫ No seleccionado"; estilo = "st-no-seleccionado"; break;
                     }
-
-                    // Si está 'muerto' (cancelado/rechazado/no seleccionado), en teoría podría volver a aplicar
-                    // según tu lógica estricta anterior, bloqueamos. Según la lógica "reset", mostramos botón.
-                    // Aquí mostramos el estado histórico para que sepa qué pasó.
-                    
-                    contenidoEstado = `
-                        <div class="status-container">
-                            <span class="status-label">Estado de tu postulación:</span>
-                            <div class="${estilo}">${mensaje}</div>
-                            ${mostrarBotonCancelar ? `<button class="btn-cancel-req" onclick="pedirCancelacion(${app.id})">Cancelar Solicitud</button>` : ''}
-                        </div>
-                    `;
-
+                    contenidoEstado = `<div class="status-container"><span class="status-label">Estado:</span><div class="${estilo}">${mensaje}</div>${mostrarBoton ? `<button class="btn-cancel-req" onclick="pedirCancelacion(${app.id})">Cancelar Solicitud</button>` : ''}</div>`;
                 } else {
-                    // NO HAY APLICACIÓN PREVIA
                     contenidoEstado = `<button class="btn-apply" onclick="aplicar(${p.id})">👋 Postularme</button>`;
                 }
-
-                html += `
-                <div class="card" style="border-left-color: ${app ? '#007bff' : '#28a745'}">
-                    <h3>${p.titulo}</h3>
-                    <p style="color:#555">${p.descripcion}</p>
-                    <p style="font-size:0.9em">
-                        🏢 <strong>${p.empresa ? p.empresa.nombre : 'N/A'}</strong> &nbsp;|&nbsp; 
-                        🎓 ${p.carreraRequerida.nombre}
-                    </p>
-                    ${contenidoEstado}
-                </div>`;
+                html += `<div class="card" style="border-left-color: ${app ? '#007bff' : '#28a745'}"><h3>${p.titulo}</h3><p style="color:#555">${p.descripcion}</p><p style="font-size:0.9em">🏢 <strong>${p.empresa.nombre}</strong> | 🎓 ${p.carreraRequerida.nombre}</p>${contenidoEstado}</div>`;
             });
 
-            if (contador === 0) html = "<p>No se encontraron pasantías con este filtro.</p>";
+            if (contador === 0) html = "<p>No hay ofertas con este filtro.</p>";
             lista.innerHTML = html;
         }
 
         async function aplicar(idPas) {
             if(!confirm("¿Postularse?")) return;
             try {
-                const res = await fetch('/api/aplicaciones/aplicar', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({idEstudiante: ID_ESTUDIANTE, idPasantia: idPas})
-                });
-                const txt = await res.text();
-                if(res.ok) { 
-                    alert("¡Enviado!"); 
-                    MIS_DATOS_GLOBAL = null; // Forzar recarga del servidor
-                    cargarPasantias(); 
-                }
-                else {
-                    try { alert("Error: " + JSON.parse(txt).message); } catch { alert("Error: " + txt); }
-                }
+                const res = await fetch('/api/aplicaciones/aplicar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({idEstudiante: ID_ESTUDIANTE, idPasantia: idPas}) });
+                if(res.ok) { alert("¡Enviado!"); MIS_DATOS_GLOBAL = null; cargarPasantias(); }
+                else { const txt = await res.text(); try { alert("Error: " + JSON.parse(txt).message); } catch { alert("Error: " + txt); } }
             } catch (e) { alert("Error de conexión"); }
         }
 
         async function pedirCancelacion(idApp) {
             if(confirm("¿Cancelar solicitud?")) {
                 await fetch(`/api/aplicaciones/${idApp}/solicitar-cancelacion`, { method: 'PUT' });
-                MIS_DATOS_GLOBAL = null;
-                cargarPasantias();
+                MIS_DATOS_GLOBAL = null; cargarPasantias();
             }
         }
 

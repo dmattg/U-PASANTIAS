@@ -43,4 +43,6 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol;
+    
+    private String foto;
 }

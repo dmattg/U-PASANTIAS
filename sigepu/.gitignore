@@ -1,39 +1,33 @@
-# --- Maven (Archivos de compilación) ---
+HELP.md
 target/
-*.log
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 
-# --- NetBeans (Archivos específicos del IDE) ---
-# Ignorar configuraciones privadas del usuario, pero mantener la config del proyecto
-nbproject/private/
-build/
-nbbuild/
-dist/
-nbdist/
-.nb-gradle/
-
-# --- Java (Archivos binarios y temporales) ---
-*.class
-*.jar
-*.war
-*.ear
-*.nar
-
-# --- Spring Boot / Eclipse / VS Code / IntelliJ (Por si acaso cambias de IDE) ---
+### STS ###
+.apt_generated
 .classpath
+.factorypath
 .project
-.settings/
-.sts4-cache/
-bin/
-.idea/
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
 *.iml
 *.ipr
-*.iws
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
 .vscode/
-
-# --- Sistema Operativo ---
-Thumbs.db
-.DS_Store
-
-# --- Seguridad (Archivos que nunca deben subirse) ---
-.env
-secrets.properties
